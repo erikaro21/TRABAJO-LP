@@ -1,3 +1,5 @@
+
+//ESTE ES EL PROGRAMA EN DART
 import 'dart:io';//para leer la entrada del usuario desde la consola
 import 'dart:math';//se utiliza para calcular el máximo en el algoritmo de Boyer-Moore
 
