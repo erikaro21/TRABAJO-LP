@@ -1,0 +1,136 @@
+//ESTE ES EL CODIGO EN SWIFT
+import Foundation
+import QuartzCore
+
+// Estructura para representar un Texto
+struct Text {
+    let content: String
+}
+
+// Función para registrar un texto en el sistema
+func registerText(_ text: String) -> Text {
+    return Text(content: text)
+}
+
+// Función de búsqueda de cadenas (algoritmo de fuerza bruta)
+func bruteForceSearch(text: String, pattern: String) -> [Range<String.Index>] {
+    var occurrences: [Range<String.Index>] = []
+    var startIndex = text.startIndex
+    
+    while startIndex < text.endIndex, let range = text[startIndex...].range(of: pattern) {
+        occurrences.append(range)
+        startIndex = range.upperBound
+    }
+    
+    return occurrences
+}
+
+// Función para contar las apariciones
+func countOccurrences(text: String, pattern: String) -> Int {
+    return bruteForceSearch(text: text, pattern: pattern).count
+}
+
+// Función para mostrar las apariciones y la sección del texto donde aparece
+func displayOccurrences(text: String, pattern: String) {
+    let startTime = CACurrentMediaTime()
+    
+    let occurrences = bruteForceSearch(text: text, pattern: pattern)
+    if occurrences.isEmpty {
+        print("No se encontraron apariciones.")
+    } else {
+        print("Cantidad de apariciones: \(occurrences.count)")
+        print("Apariciones:")
+        for (index, occurrence) in occurrences.enumerated() {
+            print("Aparición \(index + 1):")
+            let start = text.distance(from: text.startIndex, to: occurrence.lowerBound)
+            let context = 20 // Número de caracteres antes y después de la aparición para mostrar como contexto
+            let startIndex = text.index(occurrence.lowerBound, offsetBy: -min(start, context))
+            let endIndex = text.index(occurrence.upperBound, offsetBy: min(text.distance(from: occurrence.upperBound, to: text.endIndex), context))
+            print(text[startIndex..<endIndex])
+        }
+    }
+    
+    let endTime = CACurrentMediaTime()
+    let duration = endTime - startTime
+    print("Tiempo de duración de la búsqueda: \(duration) segundos.")
+}
+
+// Función para leer el contenido de un archivo de texto
+func readTextFromFile(filename: String) -> Text? {
+    let fileURL = URL(fileURLWithPath: filename)
+    do {
+        let text = try String(contentsOf: fileURL, encoding: .utf8)
+        return Text(content: text)
+    } catch {
+        print("Error al leer el archivo: \(error)")
+        return nil
+    }
+}
+
+// Función principal con enfoque funcional
+func main() {
+    var textRegistry: [Text] = []
+    
+    // Simulación de ingreso al sistema (usando un valor booleano como resultado en lugar de lanzar excepciones)
+    func login() -> Bool {
+        print("Ingrese su nombre de usuario:")
+        let username = readLine() ?? ""
+        print("Ingrese su contraseña:")
+        let password = readLine() ?? ""
+        
+        // Validar las credenciales (esto debería ser más seguro en una implementación real)
+        return username == "usuario" && password == "contrasena"
+    }
+    
+    while !login() {
+        print("Credenciales incorrectas. Inténtelo nuevamente.")
+    }
+    
+    while true {
+        print("\nElija una opción:")
+        print("1. Registrar un texto desde un archivo .txt")
+        print("2. Buscar una palabra / oración en un texto")
+        print("3. Salir")
+        
+        if let choice = readLine(), let option = Int(choice) {
+            switch option {
+            case 1:
+                print("Ingrese el nombre del archivo (incluyendo la extensión .txt):")
+                if let filename = readLine(), let text = readTextFromFile(filename: filename) {
+                    textRegistry.append(text)
+                    print("Texto registrado correctamente.")
+                }
+            case 2:
+                if !textRegistry.isEmpty {
+                    print("Textos disponibles:")
+                    for (index, text) in textRegistry.enumerated() {
+                        print("\(index + 1). Texto \(index + 1):")
+                        print(text.content)
+                    }
+                    print("Ingrese el número del texto en el que desea buscar:")
+                    if let textNumberInput = readLine(), let textNumber = Int(textNumberInput), textNumber > 0 && textNumber <= textRegistry.count {
+                        let selectedText = textRegistry[textNumber - 1].content
+                        print("Ingrese la palabra / oración a buscar:")
+                        if let pattern = readLine() {
+                            displayOccurrences(text: selectedText, pattern: pattern)
+                        }
+                    } else {
+                        print("Opción inválida.")
+                    }
+                } else {
+                    print("No hay textos registrados.")
+                }
+            case 3:
+                print("Saliendo del sistema.")
+                return
+            default:
+                print("Opción inválida.")
+            }
+        } else {
+            print("Entrada inválida. Inténtelo nuevamente.")
+        }
+    }
+}
+
+// Ejecutar el programa
+main()
