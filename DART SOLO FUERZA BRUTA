@@ -1,0 +1,142 @@
+import 'dart:io';
+import 'dart:convert';
+// Clase para representar un Texto
+class Texto {
+  final String contenido;
+
+  Texto(this.contenido);
+}
+// Clase para representar el Registro de Textos
+class RegistroTextos {
+  List<Texto> _textos = [];
+  void registrarTexto(Texto texto) {
+    _textos.add(texto);
+  }
+  List<List<int>> busquedaFuerzaBruta(String texto, String patron) {
+    final List<List<int>> apariciones = [];
+    int inicio = 0;
+    while (inicio < texto.length) {
+      final int inicioRango = texto.indexOf(patron, inicio);
+      if (inicioRango == -1) {
+        break;
+      }
+      apariciones.add([inicioRango, inicioRango + patron.length]);
+      inicio = inicioRango + 1;
+    }
+    return apariciones;
+  }
+  int contarApariciones(String texto, String patron) {
+    return busquedaFuerzaBruta(texto, patron).length;
+  }
+  void mostrarApariciones(String texto, String patron) {
+    final startTime = DateTime.now();
+    final apariciones = busquedaFuerzaBruta(texto, patron);
+    if (apariciones.isEmpty) {
+      print("No se encontraron apariciones.");
+    } else {
+      print("Cantidad de apariciones: ${apariciones.length}");
+      print("Apariciones:");
+      for (int index = 0; index < apariciones.length; index++) {
+        final aparicion = apariciones[index];
+        print("Aparicion ${index + 1}:");
+        final int inicio = aparicion[0];
+        final int fin = aparicion[1];
+        final int contexto = 20; // Numero de caracteres antes y despues de la aparicion para mostrar como contexto
+        final int inicioContexto = inicio - contexto < 0 ? 0 : inicio - contexto;
+        final int finContexto = fin + contexto > texto.length ? texto.length : fin + contexto;
+        print(texto.substring(inicioContexto, finContexto));
+      }
+    }
+    final endTime = DateTime.now();
+    final duracion = endTime.difference(startTime);
+    print("Tiempo de duracion de la busqueda: ${duracion.inMilliseconds / 1000} segundos.");
+  }
+}
+// Funcion para leer el contenido de un archivo de texto
+Texto? leerTextoDesdeArchivo(String nombreArchivo) {
+  try {
+    final File archivo = File(nombreArchivo);
+    final texto = archivo.readAsStringSync(encoding: latin1);
+    return Texto(texto);
+  } catch (e) {
+    print("Error al leer el archivo: $e");
+    return null;
+  }
+}
+// Clase principal de la aplicacion
+class BuscadorTextosApp {
+  final RegistroTextos registroTextos = RegistroTextos();
+  bool inicioSesion() {
+    stdout.write("Ingrese su nombre de usuario: ");
+    final String? nombreUsuario = stdin.readLineSync();
+    stdout.write("Ingrese su contrasena: ");
+    final String? contrasena = stdin.readLineSync(encoding: latin1);
+    // Validar credenciales (esto deberia ser mas seguro en una implementacion real)
+    return nombreUsuario == "usuario" && contrasena == "contrasena";
+  }
+  void ejecutar() {
+    // Simular proceso de inicio de sesion
+    while (!inicioSesion()) {
+      print("Credenciales incorrectas. Intentelo nuevamente.");
+    }
+    while (true) {
+      print("\nElija una opcion:");
+      print("1. Registrar un texto desde un archivo .txt");
+      print("2. Buscar una palabra / oracion en un texto");
+      print("3. Salir");
+      final String? eleccion = stdin.readLineSync();
+      final int? opcion = int.tryParse(eleccion ?? '');
+      if (opcion != null) {
+        switch (opcion) {
+          case 1:
+            print("Ingrese el nombre del archivo (incluyendo la extension .txt):");
+            final String? nombreArchivo = stdin.readLineSync();
+            if (nombreArchivo != null) {
+              final Texto? texto = leerTextoDesdeArchivo(nombreArchivo);
+              if (texto != null) {
+                registroTextos.registrarTexto(texto);
+                print("Texto registrado correctamente.");
+              }
+            }
+            break;
+          case 2:
+            if (registroTextos._textos.isNotEmpty) {
+              print("Textos disponibles:");
+              for (int index = 0; index < registroTextos._textos.length; index++) {
+                final texto = registroTextos._textos[index];
+                print("${index + 1}. Texto ${index + 1}:");
+                print(texto.contenido);
+              }
+              stdout.write("Ingrese el numero del texto en el que desea buscar: ");
+              final String? entradaNumeroTexto = stdin.readLineSync();
+              final int? numeroTexto = int.tryParse(entradaNumeroTexto ?? '');
+              if (numeroTexto != null && numeroTexto > 0 && numeroTexto <= registroTextos._textos.length) {
+                final String textoSeleccionado = registroTextos._textos[numeroTexto - 1].contenido;
+                stdout.write("Ingrese la palabra / oracion a buscar: ");
+                final String? patron = stdin.readLineSync(encoding: latin1);
+                if (patron != null) {
+                  registroTextos.mostrarApariciones(textoSeleccionado, patron);
+                }
+              } else {
+                print("Opcion invalida.");
+              }
+            } else {
+              print("No hay textos registrados.");
+            }
+            break;
+          case 3:
+            print("Saliendo del sistema.");
+            return;
+          default:
+            print("Opcion invalida.");
+        }
+      } else {
+        print("Entrada invalida. Intentelo nuevamente.");
+      }
+    }
+  }
+}
+// Ejecutar el programa
+void main() {
+  BuscadorTextosApp().ejecutar();
+}
